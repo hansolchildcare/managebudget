@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>한솔어린이보육재단 경영관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:#1f2937;background:#f3f4f6;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+
+/* ── 로그인 ── */
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;background:#f3f4f6}
+.lc{background:#fff;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.lc-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
+.lc-sub{font-size:13px;color:#6b7280;margin-bottom:28px}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px}
+.lf select,.lf input{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;background:#fafafa;color:#111;outline:none;transition:border-color .15s}
+.lf select:focus,.lf input:focus{border-color:#3b82f6;background:#fff}
+.lbtn{width:100%;padding:12px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;margin-top:8px;cursor:pointer;transition:background .15s}
+.lbtn:hover{background:#1e40af}
+.lerr{font-size:12px;color:#ef4444;min-height:18px;margin-top:8px}
+
+/* ── 앱 ── */
+#app{display:none;height:100vh;flex-direction:column}
+.topbar{height:52px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;color:#111}
+.tb-r{display:flex;align-items:center;gap:10px}
+.tb-user{font-size:12px;font-weight:600;color:#fff;background:#3b82f6;padding:4px 12px;border-radius:20px}
+.tb-out{font-size:12px;color:#6b7280;background:none;border:1px solid #d1d5db;padding:4px 12px;border-radius:6px;cursor:pointer}
+.tb-out:hover{background:#f9fafb}
+.body{display:flex;flex:1;overflow:hidden}
+
+/* ── 사이드바 ── */
+.sidebar{width:180px;background:#fff;border-right:1px solid #e5e7eb;padding:10px 0;flex-shrink:0;overflow-y:auto}
+.ng{font-size:10px;font-weight:700;color:#9ca3af;padding:12px 16px 4px;letter-spacing:.06em}
+.ni{padding:9px 16px;font-size:13px;color:#4b5563;cursor:pointer;border-left:3px solid transparent;transition:all .12s}
+.ni:hover{background:#f0f4ff;color:#1d4ed8}
+.ni.on{background:#eff6ff;color:#1d4ed8;border-left-color:#1d4ed8;font-weight:600}
+
+/* ── 콘텐츠 ── */
+.content{flex:1;overflow-y:auto;padding:20px}
+
+/* ── 연도 탭 ── */
+.ytabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.yt{padding:5px 13px;font-size:13px;font-weight:500;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;transition:all .12s}
+.yt:hover{border-color:#93c5fd;color:#1d4ed8}
+.yt.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+
+/* ── 페이지 헤더 ── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ph-l .ph-title{font-size:18px;font-weight:700;color:#111}
+.ph-l .ph-sub{font-size:12px;color:#6b7280;margin-top:3px}
+
+/* ── KPI ── */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;cursor:pointer;transition:box-shadow .15s,transform .1s;position:relative;overflow:hidden}
+.kpi:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::after{background:#3b82f6}.kpi.green::after{background:#10b981}
+.kpi.red::after{background:#ef4444}.kpi.amber::after{background:#f59e0b}
+.kpi-lbl{font-size:11px;font-weight:600;color:#6b7280;letter-spacing:.04em;margin-bottom:8px}
+.kpi-val{font-size:20px;font-weight:700;color:#111;line-height:1.1;margin-bottom:4px;word-break:break-all}
+.kpi-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+.kpi-rate{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:6px}
+.ok{background:#d1fae5;color:#065f46}.warn{background:#fef3c7;color:#92400e}.over{background:#fee2e2;color:#991b1b}
+
+/* ── 카드 ── */
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:700;color:#374151;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+.g2e{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── 차트 ── */
+.chart{display:flex;align-items:flex-end;gap:2px;height:100px}
+.bg{display:flex;flex-direction:column;align-items:center;flex:1}
+.bw{display:flex;align-items:flex-end;gap:2px;height:82px}
+.b{min-height:2px;border-radius:3px 3px 0 0;width:10px}
+.b.inc{background:#3b82f6}.b.exp{background:#f87171}
+.bl{font-size:9px;color:#9ca3af;margin-top:3px;white-space:nowrap}
+.lgd{display:flex;gap:12px;margin-top:8px}
+.li{display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280}
+.ld{width:10px;height:10px;border-radius:2px}
+
+/* ── 테이블 ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:700;color:#9ca3af;padding:8px 10px;border-bottom:2px solid #f3f4f6;white-space:nowrap;background:#fafafa}
+td{padding:8px 10px;border-bottom:1px solid #f9fafb;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafcff}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dim{color:#d1d5db}
+
+/* ── 집행률 바 ── */
+.prog{background:#f3f4f6;border-radius:4px;height:6px;min-width:60px;flex:1}
+.pf{height:6px;border-radius:4px}
+.pf.ok{background:#3b82f6}.pf.warn{background:#f59e0b}.pf.over{background:#ef4444}
+
+/* ── 배지 ── */
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;display:inline-block}
+.b-ok{background:#d1fae5;color:#065f46}.b-warn{background:#fef3c7;color:#92400e}
+.b-over{background:#fee2e2;color:#991b1b}.b-gray{background:#f3f4f6;color:#6b7280}
+
+/* ── 경보 박스 ── */
+.abox{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#b91c1c;margin-bottom:12px;line-height:1.6}
+.ibox{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:13px;color:#1d4ed8;margin-bottom:12px}
+.wbox{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;margin-bottom:12px;line-height:1.7}
+
+/* ── 폼 ── */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;font-weight:600;color:#374151}
+.fld input,.fld select,.fld textarea{padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;background:#fafafa;color:#111;outline:none;transition:border-color .15s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#3b82f6;background:#fff}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:1.5px solid #e5e7eb;background:#fff;color:#374151;cursor:pointer;transition:all .12s}
+.btn:hover{background:#f3f4f6}
+.btn-p{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.btn-p:hover{background:#1e40af}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-row{display:flex;gap:8px;margin-top:14px}
+
+/* ── 업로드 ── */
+.dz{border:2px dashed #d1d5db;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .15s}
+.dz:hover,.dz.over{border-color:#3b82f6;background:#eff6ff}
+.dz-icon{font-size:32px;margin-bottom:10px}
+.dz-t{font-size:14px;font-weight:600;margin-bottom:4px}
+.dz-s{font-size:12px;color:#9ca3af}
+.us{margin-top:10px;font-size:13px;min-height:18px}
+.us.ok{color:#065f46}.us.err{color:#b91c1c}.us.ing{color:#1d4ed8}
+
+/* ── 해시/비번 ── */
+.hash-box{font-family:'Courier New',monospace;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #f3f4f6;border-radius:6px;padding:8px 10px;word-break:break-all;min-height:30px;margin-top:4px}
+.pw-bar{height:4px;border-radius:2px;margin-top:4px;transition:width .25s,background .25s}
+
+/* ── 경과 사항 ── */
+.note-list{list-style:none}
+.note-item{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:13px;line-height:1.5}
+.note-item:last-child{border-bottom:none}
+.note-meta{font-size:11px;color:#9ca3af;white-space:nowrap;margin-top:2px}
+.note-del{font-size:11px;color:#9ca3af;background:none;border:none;cursor:pointer;flex-shrink:0;padding:2px 6px;border-radius:4px}
+.note-del:hover{background:#fee2e2;color:#b91c1c}
+
+/* ── 집행 분석 ── */
+.ana-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.ana-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px}
+.ana-lbl{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px}
+.ana-val{font-size:18px;font-weight:700}
+
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999}
+.toast.show{opacity:1}
+.toast.ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.toast.err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+@media(max-width:900px){.kgrid{grid-template-columns:1fr 1fr}.g2,.g2e,.fgrid,.fgrid3{grid-template-columns:1fr}.ana-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- ══ 로그인 ══ -->
+<div id="login-screen">
+  <div class="lc">
+    <div class="lc-title">한솔어린이보육재단</div>
+    <div class="lc-sub">경영관리 시스템</div>
+    <div class="lf">
+      <label>부서</label>
+      <select id="l-dept">
+        <option value="">-- 부서 선택 --</option>
+        <option value="admin">관리자 (총괄)</option>
+        <option value="mgmt">경영지원실</option>
+        <option value="ops">운영본부</option>
+        <option value="research">연구소</option>
+        <option value="hope">희망재단</option>
+      </select>
+    </div>
+    <div class="lf">
+      <label>비밀번호</label>
+      <input type="password" id="l-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="lerr" id="l-err"></div>
+    <button class="lbtn" id="l-btn" onclick="doLogin()">로그인</button>
+  </div>
+</div>
+
+<!-- ══ 메인 앱 ══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="tb-title">한솔어린이보육재단 경영관리 시스템</div>
+    <div class="tb-r">
+      <span class="tb-user" id="tb-user"></span>
+      <button class="tb-out" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="body">
+    <nav class="sidebar" id="sidebar"></nav>
+    <div class="content" id="content">
+      <div style="color:#9ca3af;padding:40px;text-align:center">로딩 중...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// 전역 상태
+// ══════════════════════════════════════════════════
+const G = { token:null, session:null, year:'2026', rows:[], entries:{}, notes:[], page:'dashboard' };
+
+// ══════════════════════════════════════════════════
+// 유틸
+// ══════════════════════════════════════════════════
+async function sha256(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+// 1원 단위 콤마 표시
+function fmtW(n) {
+  n = Math.round(n || 0);
+  if (n === 0) return '-';
+  return (n < 0 ? '-' : '') + Math.abs(n).toLocaleString('ko-KR') + '원';
+}
+
+// 백만 단위 (표 헤더용)
+function fmtM(n) {
+  n = Math.round(n || 0);
+  if (n === 0) return '-';
+  const abs = Math.abs(n);
+  if (abs >= 100000000) return (n<0?'-':'') + (abs/100000000).toFixed(1) + '억원';
+  if (abs >= 10000000)  return (n<0?'-':'') + (abs/10000000).toFixed(1) + '천만원';
+  return (n<0?'-':'') + Math.round(abs/10000).toLocaleString() + '만원';
+}
+
+function pct(r) { return r || r===0 ? (r*100).toFixed(1)+'%' : '-'; }
+function num(v) { return typeof v==='number' ? v : (parseFloat(String(v||0).replace(/,/g,''))||0); }
+function toN(v) { if(!v&&v!==0)return 0; return typeof v==='number'?v:(parseFloat(String(v).replace(/,/g,''))||0); }
+
+function baseRate() { return Math.min((new Date().getMonth()+1)/12, 1); }
+
+function rCls(r) {
+  const b = baseRate();
+  if (r > b*1.15) return 'over';
+  if (r > b*1.05) return 'warn';
+  return 'ok';
+}
+function rLabel(r) { const c=rCls(r); return c==='over'?'초과':c==='warn'?'주의':'정상'; }
+
+function set$(html) { document.getElementById('content').innerHTML = html; }
+function loading() { set$('<div style="color:#9ca3af;padding:40px;text-align:center">데이터 로딩 중...</div>'); }
+
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast '+type+' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// 수입·지출 오류 분석
+function analyzeErrors(rows) {
+  const warnings = [];
+  // 수입 합계
+  const incSum = rows.find(r => r[1]==='수입' && r[2]==='합계');
+  // 지출 합계
+  const opSum  = rows.find(r => r[1]==='지출-운영비' && r[2]==='합계');
+  const bizSum = rows.find(r => r[1]==='지출-사업비' && r[2]==='합계');
+
+  if (incSum) {
+    const calcTotal = [5,6,7,8,9,10,11,12,13,14,15,16].reduce((a,i)=>a+num(incSum[i]),0);
+    const reported  = num(incSum[17]);
+    if (reported > 0 && Math.abs(calcTotal - reported) > 100) {
+      warnings.push(`수입 누계 불일치: 월별 합산 ${fmtW(calcTotal)} ≠ 누계 ${fmtW(reported)}`);
+    }
+    // 집행률 검증
+    const budget = num(incSum[4]);
+    if (budget > 0) {
+      const calcRate = reported / budget;
+      const reportedRate = num(incSum[18]);
+      if (Math.abs(calcRate - reportedRate) > 0.001) {
+        warnings.push(`수입 집행률 오류: 계산값 ${pct(calcRate)} ≠ 표기값 ${pct(reportedRate)}`);
+      }
+    }
+  }
+  if (opSum) {
+    const calcTotal = [5,6,7,8,9,10,11,12,13,14,15,16].reduce((a,i)=>a+num(opSum[i]),0);
+    const reported  = num(opSum[17]);
+    if (reported > 0 && Math.abs(calcTotal - reported) > 100) {
+      warnings.push(`운영비 누계 불일치: 월별 합산 ${fmtW(calcTotal)} ≠ 누계 ${fmtW(reported)}`);
+    }
+  }
+  if (bizSum) {
+    const calcTotal = [5,6,7,8,9,10,11,12,13,14,15,16].reduce((a,i)=>a+num(bizSum[i]),0);
+    const reported  = num(bizSum[17]);
+    if (reported > 0 && Math.abs(calcTotal - reported) > 100) {
+      warnings.push(`사업비 누계 불일치: 월별 합산 ${fmtW(calcTotal)} ≠ 누계 ${fmtW(reported)}`);
+    }
+  }
+  // 수입 > 예산 초과
+  if (incSum && num(incSum[17]) > num(incSum[4]) && num(incSum[4]) > 0) {
+    warnings.push(`수입 누계(${fmtW(num(incSum[17]))})가 예산(${fmtW(num(incSum[4]))})을 초과하였습니다.`);
+  }
+  return warnings;
+}
+
+// ══════════════════════════════════════════════════
+// 로그인 / 로그아웃
+// ══════════════════════════════════════════════════
+async function doLogin() {
+  const dept = document.getElementById('l-dept').value;
+  const pw   = document.getElementById('l-pw').value;
+  const err  = document.getElementById('l-err');
+  err.textContent = '';
+  if (!dept) { err.textContent = '부서를 선택하세요.'; return; }
+  if (!pw)   { err.textContent = '비밀번호를 입력하세요.'; return; }
+  document.getElementById('l-btn').textContent = '로그인 중...';
+  const hash = await sha256(pw);
+  google.script.run
+    .withSuccessHandler(r => {
+      document.getElementById('l-btn').textContent = '로그인';
+      if (r.ok) {
+        G.token = r.token; G.session = r;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('tb-user').textContent = r.name;
+        buildSidebar(); go('dashboard');
+      } else err.textContent = r.msg;
+    })
+    .withFailureHandler(e => {
+      document.getElementById('l-btn').textContent = '로그인';
+      err.textContent = '오류: ' + e.message;
+    })
+    .login(dept, hash);
+}
+
+function doLogout() {
+  google.script.run.logout(G.token);
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-pw').value = '';
+  document.getElementById('l-dept').value = '';
+  document.getElementById('l-err').textContent = '';
+  G.token = null; G.session = null; G.rows = []; G.entries = {}; G.notes = [];
+}
+
+// ══════════════════════════════════════════════════
+// 사이드바 & 라우팅
+// ══════════════════════════════════════════════════
+const NAVS = [
+  { g:'현황', items:[
+    { id:'dashboard', lbl:'대시보드' },
+    { id:'analysis',  lbl:'집행 분석' },
+  ]},
+  { g:'예결산', items:[
+    { id:'income',  lbl:'수입 내역',   roles:['admin','manager'] },
+    { id:'expop',   lbl:'운영비 집행', roles:['admin','manager'] },
+    { id:'expbiz',  lbl:'사업비 집행' },
+  ]},
+  { g:'입력', items:[
+    { id:'entry-income', lbl:'수입 입력',   roles:['admin','manager'] },
+    { id:'entry-opex',   lbl:'운영비 입력', roles:['admin','manager'] },
+    { id:'entry-biz',    lbl:'사업비 입력' },
+    { id:'note-entry',   lbl:'주요경과 입력', roles:['admin','manager'] },
+    { id:'upload',       lbl:'엑셀 업로드',  roles:['admin','manager'] },
+  ]},
+  { g:'관리', items:[
+    { id:'pwchange', lbl:'비밀번호 관리', roles:['admin'] },
+  ]},
+];
+
+function buildSidebar() {
+  const role = G.session.role;
+  let html = '';
+  NAVS.forEach(g => {
+    const items = g.items.filter(i => !i.roles || i.roles.includes(role));
+    if (!items.length) return;
+    html += `<div class="ng">${g.g}</div>`;
+    items.forEach(i => html += `<div class="ni" id="ni-${i.id}" onclick="go('${i.id}')">${i.lbl}</div>`);
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function go(page) {
+  G.page = page;
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
+  const el = document.getElementById('ni-' + page);
+  if (el) el.classList.add('on');
+
+  // 입력 전용 페이지 (데이터 로드 불필요)
+  const noLoad = ['upload','pwchange','entry-income','entry-opex','entry-biz','note-entry'];
+  if (noLoad.includes(page)) {
+    if (page === 'upload')       renderUpload();
+    else if (page === 'pwchange')     renderPwChange();
+    else if (page === 'entry-income') renderEntry('INCOME_ENTRY','수입');
+    else if (page === 'entry-opex')   renderEntry('OPEX_ENTRY','지출-운영비');
+    else if (page === 'entry-biz')    renderEntry('BIZ_ENTRY','지출-사업비');
+    else if (page === 'note-entry')   renderNoteEntry();
+    return;
+  }
+
+  loading();
+  // 결산 데이터 + 집행입력 + 주요경과 병렬 로드
+  google.script.run
+    .withSuccessHandler(r1 => {
+      if (!r1.ok) { set$(`<div class="abox">오류: ${r1.msg}</div>`); return; }
+      G.rows = r1.rows;
+      google.script.run
+        .withSuccessHandler(r2 => {
+          G.entries = r2.ok ? r2.data : {};
+          google.script.run
+            .withSuccessHandler(r3 => {
+              G.notes = r3.ok ? r3.rows : [];
+              renderPage(page);
+            })
+            .withFailureHandler(() => { G.notes = []; renderPage(page); })
+            .getNotes(G.token, G.year);
+        })
+        .withFailureHandler(() => { G.entries = {}; renderPage(page); })
+        .getAllEntries(G.token, G.year);
+    })
+    .withFailureHandler(e => set$(`<div class="abox">서버 오류: ${e.message}</div>`))
+    .getData(G.token, G.year);
+}
+
+function renderPage(page) {
+  if (page === 'dashboard') renderDashboard();
+  else if (page === 'analysis') renderAnalysis();
+  else if (page === 'income')   renderIncome();
+  else if (page === 'expop')    renderExpOp();
+  else if (page === 'expbiz')   renderExpBiz();
+}
+
+// ── 연도 탭 ───────────────────────────────
+function ytabs() {
+  const ys = [];
+  for (let y = 2025; y <= 2050; y++) ys.push(y);
+  return `<div class="ytabs">${ys.map(y =>
+    `<div class="yt${String(y)===G.year?' on':''}" onclick="changeYear('${y}')">${y}년</div>`
+  ).join('')}</div>`;
+}
+
+function changeYear(y) { G.year = String(y); go(G.page); }
+
+// ══════════════════════════════════════════════════
+// 대시보드
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  const rows = G.rows;
+  const incSum = rows.find(r => r[1]==='수입'&&r[2]==='합계');
+  const opSum  = rows.find(r => r[1]==='지출-운영비'&&r[2]==='합계');
+  const bizSum = rows.find(r => r[1]==='지출-사업비'&&r[2]==='합계');
+
+  const incBud = num(incSum?.[4]); const incTot = num(incSum?.[17]);
+  const expBud = num(opSum?.[4])  + num(bizSum?.[4]);
+  const expTot = num(opSum?.[17]) + num(bizSum?.[17]);
+  const profit = incTot - expTot;
+  const incRate = incBud ? incTot/incBud : 0;
+  const expRate = expBud ? expTot/expBud : 0;
+  const base = baseRate();
+
+  // 전체 부서 총 집행률
+  const totalBud = incBud + expBud;
+  const totalExe = incTot + expTot;
+  const totalRate = totalBud ? totalExe/totalBud/2 : 0; // 수입+지출 평균
+
+  // 월별
+  const incM = new Array(12).fill(0);
+  const expM = new Array(12).fill(0);
+  rows.filter(r=>r[1]==='수입'&&r[2]==='합계').forEach(r=>{for(let i=0;i<12;i++)incM[i]+=num(r[5+i]);});
+  rows.filter(r=>(r[1]==='지출-운영비'||r[1]==='지출-사업비')&&r[2]==='합계').forEach(r=>{for(let i=0;i<12;i++)expM[i]+=num(r[5+i]);});
+
+  // 오류 분석
+  const errors = analyzeErrors(rows);
+
+  // 집행률 초과 항목
+  const overItems = rows.filter(r=>r[3]&&r[2]!=='합계'&&r[2]!=='손익'&&num(r[18])>base*1.15&&num(r[4])>0).slice(0,5);
+
+  // 비목별 테이블
+  const cats = [
+    {lbl:'인건비',     r:rows.find(r=>r[1]==='지출-운영비'&&r[2]==='인건비'&&!r[3])},
+    {lbl:'운영비',     r:rows.find(r=>r[1]==='지출-운영비'&&r[2]==='재단 운영비'&&!r[3])},
+    {lbl:'사업비-공통',r:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('공통')&&!r[3])},
+    {lbl:'사업비-운영본부',r:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('운영본부')&&!r[3])},
+    {lbl:'사업비-경영지원실',r:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('경영지원실')&&!r[3])},
+    {lbl:'사업비-연구소',r:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('연구소')&&!r[3])},
+  ].filter(c=>c.r);
+
+  // 주요 경과
+  const notesByMonth = {};
+  G.notes.forEach(n => {
+    const m = n[1];
+    if (!notesByMonth[m]) notesByMonth[m] = [];
+    notesByMonth[m].push(n[2]);
+  });
+  const notesHtml = Object.keys(notesByMonth).sort().map(m =>
+    notesByMonth[m].map(t => `<li><b>${m}월</b> ${t}</li>`).join('')
+  ).join('') || '<li style="color:#9ca3af">입력된 경과 사항이 없습니다.</li>';
+
+  const canNote = G.session.role==='admin'||G.session.role==='manager';
+
+  set$(`
+  ${ytabs()}
+
+  <!-- KPI -->
+  <div class="kgrid">
+    <div class="kpi blue" onclick="go('income')" title="수입 내역">
+      <div class="kpi-lbl">${G.year}년 예산</div>
+      <div class="kpi-val">${fmtW(incBud)}</div>
+      <div class="kpi-sub">총 수입 예산액</div>
+    </div>
+    <div class="kpi green" onclick="go('income')" title="수입 내역">
+      <div class="kpi-lbl">1~2월 누적 수입</div>
+      <div class="kpi-val">${fmtW(incTot)}</div>
+      <div class="kpi-sub">집행률 ${pct(incRate)}</div>
+      <span class="kpi-rate ${rCls(incRate)}">${rLabel(incRate)}</span>
+    </div>
+    <div class="kpi red" onclick="go('expop')" title="운영비 집행">
+      <div class="kpi-lbl">1~2월 누적 지출</div>
+      <div class="kpi-val">${fmtW(expTot)}</div>
+      <div class="kpi-sub">집행률 ${pct(expRate)}</div>
+      <span class="kpi-rate ${rCls(expRate)}">${rLabel(expRate)}</span>
+    </div>
+    <div class="kpi ${profit>=0?'green':'red'}">
+      <div class="kpi-lbl">누적 순익</div>
+      <div class="kpi-val">${fmtW(profit)}</div>
+      <div class="kpi-sub">1월 ${fmtW(incM[0]-expM[0])} | 2월 ${fmtW(incM[1]-expM[1])}</div>
+    </div>
+  </div>
+
+  <!-- 전체 총 집행률 -->
+  <div class="ibox">
+    전체 부서 총 집행률: <b>${pct(incRate)}</b> (수입) / <b>${pct(expRate)}</b> (지출) · 기준율 <b>${pct(base)}</b> (${new Date().getMonth()+1}월 기준)
+  </div>
+
+  <!-- 오류 경고 -->
+  ${errors.length ? `<div class="abox"><b>⚠ 수입·지출 금액 오류 감지</b><br>${errors.join('<br>')}</div>` : ''}
+
+  <!-- 집행률 초과 경고 -->
+  ${overItems.length ? `<div class="wbox">⚠ 집행률 기준 초과 항목 (기준율 ${pct(base)} 대비 15% 초과)<br>
+    ${overItems.map(r=>`<b>${r[3]}</b> ${pct(num(r[18]))}`).join(' · ')}</div>` : ''}
+
+  <div class="g2">
+    <!-- 비목별 -->
+    <div class="card">
+      <div class="card-title">비목별 예산 대비 집행 현황</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>구분</th><th class="num">예산</th><th class="num">1월</th><th class="num">2월</th><th class="num">누계</th><th>집행률</th></tr></thead>
+          <tbody>
+          ${cats.map(c => {
+            const r=c.r; const rate=num(r[18]); const cls=rCls(rate);
+            return `<tr>
+              <td style="font-weight:500">${c.lbl}</td>
+              <td class="num">${fmtW(num(r[4]))}</td>
+              <td class="num">${num(r[5])?fmtW(num(r[5])):'-'}</td>
+              <td class="num">${num(r[6])?fmtW(num(r[6])):'-'}</td>
+              <td class="num"><b>${fmtW(num(r[17]))}</b></td>
+              <td><div style="display:flex;align-items:center;gap:6px">
+                <div class="prog"><div class="pf ${cls}" style="width:${Math.min(rate,1)*100}%"></div></div>
+                <span class="badge b-${cls}">${pct(rate)}</span>
+              </div></td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 항목별 집행 현황 + 주요 경과 -->
+    <div class="card">
+      <div class="card-title">항목별 집행 현황</div>
+      ${buildChart(incM, expM)}
+      <div style="margin-top:14px;border-top:1px solid #f3f4f6;padding-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:700;color:#9ca3af">주요 경과</span>
+          ${canNote ? `<button class="btn btn-sm" onclick="go('note-entry')">+ 입력</button>` : ''}
+        </div>
+        <ul class="note-list">${notesHtml}</ul>
+      </div>
+    </div>
+  </div>
+  `);
+}
+
+function buildChart(incM, expM) {
+  const maxV = Math.max(...incM, ...expM, 1);
+  const H = 80;
+  const months = '1,2,3,4,5,6,7,8,9,10,11,12'.split(',');
+  const bars = months.map((m,i) => {
+    const ih = Math.max(Math.round(incM[i]/maxV*H), incM[i]>0?2:0);
+    const eh = Math.max(Math.round(expM[i]/maxV*H), expM[i]>0?2:0);
+    return `<div class="bg"><div class="bw"><div class="b inc" style="height:${ih}px"></div><div class="b exp" style="height:${eh}px"></div></div><div class="bl">${m}월</div></div>`;
+  }).join('');
+  return `<div class="chart">${bars}</div><div class="lgd"><div class="li"><div class="ld" style="background:#3b82f6"></div>수입</div><div class="li"><div class="ld" style="background:#f87171"></div>지출</div></div>`;
+}
+
+// ══════════════════════════════════════════════════
+// 집행 분석
+// ══════════════════════════════════════════════════
+function renderAnalysis() {
+  const rows = G.rows;
+  const errors = analyzeErrors(rows);
+  const base = baseRate();
+
+  // 부서별 집행률
+  const deptData = [
+    {lbl:'인건비',   row:rows.find(r=>r[1]==='지출-운영비'&&r[2]==='인건비'&&!r[3])},
+    {lbl:'운영비',   row:rows.find(r=>r[1]==='지출-운영비'&&r[2]==='재단 운영비'&&!r[3])},
+    {lbl:'공통사업', row:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('공통')&&!r[3])},
+    {lbl:'운영본부', row:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('운영본부')&&!r[3])},
+    {lbl:'경영지원실',row:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('경영지원실')&&!r[3])},
+    {lbl:'연구소',   row:rows.find(r=>r[1]==='지출-사업비'&&String(r[2]).includes('연구소')&&!r[3])},
+  ].filter(d=>d.row);
+
+  // 전체 집행률 계산
+  const incSum = rows.find(r=>r[1]==='수입'&&r[2]==='합계');
+  const opSum  = rows.find(r=>r[1]==='지출-운영비'&&r[2]==='합계');
+  const bizSum = rows.find(r=>r[1]==='지출-사업비'&&r[2]==='합계');
+  const totalBud = num(incSum?.[4]) + num(opSum?.[4]) + num(bizSum?.[4]);
+  const totalExe = num(incSum?.[17]) + num(opSum?.[17]) + num(bizSum?.[17]);
+  const totalRate = totalBud ? totalExe/totalBud : 0;
+
+  // 미집행 항목
+  const zeroItems = rows.filter(r=>r[3]&&r[2]!=='합계'&&r[2]!=='손익'&&num(r[4])>0&&num(r[17])===0);
+
+  set$(`
+  ${ytabs()}
+  <div class="ph"><div class="ph-l"><div class="ph-title">집행 분석</div><div class="ph-sub">${G.year}년 예산 집행 심층 분석</div></div></div>
+
+  <!-- 종합 집행률 -->
+  <div class="ana-grid">
+    <div class="ana-item">
+      <div class="ana-lbl">전체 총 집행률</div>
+      <div class="ana-val" style="color:#1d4ed8">${pct(totalRate)}</div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:4px">기준율 ${pct(base)}</div>
+    </div>
+    <div class="ana-item">
+      <div class="ana-lbl">수입 집행률</div>
+      <div class="ana-val" style="color:#10b981">${pct(incSum ? num(incSum[18]) : 0)}</div>
+    </div>
+    <div class="ana-item">
+      <div class="ana-lbl">지출 집행률</div>
+      <div class="ana-val" style="color:#ef4444">${pct(opSum ? ((num(opSum[17])+num(bizSum?.[17]))/(num(opSum[4])+num(bizSum?.[4])||1)) : 0)}</div>
+    </div>
+  </div>
+
+  <!-- 오류 경고 -->
+  ${errors.length ? `<div class="abox"><b>⚠ 금액 오류 감지</b><br>${errors.join('<br>')}</div>` : '<div class="ibox">✓ 수입·지출 금액 오류 없음</div>'}
+
+  <!-- 부서별 집행률 현황 -->
+  <div class="card">
+    <div class="card-title">비목별 상세 집행률</div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>비목</th><th class="num">예산 (원)</th><th class="num">집행액 (원)</th><th class="num">잔액 (원)</th><th>집행률</th><th>상태</th></tr></thead>
+        <tbody>
+        ${deptData.map(d => {
+          const r=d.row; const rate=num(r[18]); const cls=rCls(rate);
+          const bud=num(r[4]); const exe=num(r[17]); const rem=bud-exe;
+          return `<tr>
+            <td style="font-weight:500">${d.lbl}</td>
+            <td class="num">${fmtW(bud)}</td>
+            <td class="num">${fmtW(exe)}</td>
+            <td class="num" style="color:${rem<0?'#ef4444':'inherit'}">${fmtW(rem)}</td>
+            <td><div style="display:flex;align-items:center;gap:6px">
+              <div class="prog"><div class="pf ${cls}" style="width:${Math.min(rate,1)*100}%"></div></div>
+              <span style="font-size:11px;min-width:36px">${pct(rate)}</span>
+            </div></td>
+            <td><span class="badge b-${cls}">${rLabel(rate)}</span></td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 미집행 항목 -->
+  ${zeroItems.length ? `<div class="card">
+    <div class="card-title">미집행 항목 (예산 배정 후 미집행)</div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>구분</th><th>세목</th><th class="num">예산 (원)</th></tr></thead>
+        <tbody>${zeroItems.map(r=>`<tr><td>${r[2]}</td><td>${r[3]}</td><td class="num">${fmtW(num(r[4]))}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>` : ''}
+  `);
+}
+
+// ══════════════════════════════════════════════════
+// 수입 내역
+// ══════════════════════════════════════════════════
+function renderIncome() {
+  const rows = G.rows.filter(r=>r[1]==='수입'&&r[2]!=='합계'&&r[2]!=='손익'&&r[3]);
+  const sumRow = G.rows.find(r=>r[1]==='수입'&&r[2]==='합계');
+  const entries = (G.entries['INCOME_ENTRY']||[]).slice(-5).reverse();
+
+  set$(`
+  ${ytabs()}
+  <div class="ph">
+    <div class="ph-l"><div class="ph-title">수입 내역</div><div class="ph-sub">${G.year}년 월별 수입 집행 현황 (1원 단위)</div></div>
+    <button class="btn btn-p" onclick="go('entry-income')">+ 수입 입력</button>
+  </div>
+  ${sumRow?`<div class="ibox">총 수입 예산 <b>${fmtW(num(sumRow[4]))}</b> · 누계 <b>${fmtW(num(sumRow[17]))}</b> · 집행률 <b>${pct(num(sumRow[18]))}</b></div>`:''}
+  <div class="card">
+    <div class="tw"><table>
+      <thead><tr><th>세목</th><th class="num">예산 (원)</th><th class="num">1월</th><th class="num">2월</th><th class="num">3월</th><th class="num">4월</th><th class="num">5월</th><th class="num">6월</th><th class="num">누계 (원)</th><th>집행률</th></tr></thead>
+      <tbody>
+      ${rows.map(r=>{const rate=num(r[18]);const cls=rCls(rate);return`<tr>
+        <td>${r[3]}</td>
+        <td class="num">${fmtW(num(r[4]))}</td>
+        ${[5,6,7,8,9,10].map(i=>`<td class="num ${!num(r[i])?'dim':''}">${num(r[i])?fmtW(num(r[i])):'-'}</td>`).join('')}
+        <td class="num"><b>${fmtW(num(r[17]))}</b></td>
+        <td><div style="display:flex;align-items:center;gap:6px">
+          <div class="prog"><div class="pf ${cls}" style="width:${Math.min(rate,1)*100}%"></div></div>
+          <span class="badge b-${cls}">${pct(rate)}</span>
+        </div></td>
+      </tr>`;}).join('')}
+      </tbody>
+    </table></div>
+  </div>
+  ${entries.length?`<div class="card"><div class="card-title">최근 입력 내역</div><div class="tw"><table>
+    <thead><tr><th>집행일자</th><th>세목</th><th class="num">금액 (원)</th><th>비고</th><th>입력자</th></tr></thead>
+    <tbody>${entries.map(r=>`<tr><td>${r[1]}</td><td>${r[5]}</td><td class="num">${fmtW(num(r[6]))}</td><td style="font-size:12px;color:#6b7280">${r[7]||''}</td><td style="font-size:12px;color:#9ca3af">${r[8]}</td></tr>`).join('')}</tbody>
+  </table></div></div>`:''}
+  `);
+}
+
+// ══════════════════════════════════════════════════
+// 운영비 집행
+// ══════════════════════════════════════════════════
+function renderExpOp() {
+  const secs = [
+    {lbl:'인건비',    rows:G.rows.filter(r=>r[1]==='지출-운영비'&&r[2]==='인건비'&&r[3])},
+    {lbl:'재단 운영비',rows:G.rows.filter(r=>r[1]==='지출-운영비'&&r[2]==='재단 운영비'&&r[3])},
+  ];
+  const entries = (G.entries['OPEX_ENTRY']||[]).slice(-5).reverse();
+
+  set$(`
+  ${ytabs()}
+  <div class="ph">
+    <div class="ph-l"><div class="ph-title">운영비 집행</div><div class="ph-sub">${G.year}년 인건비·운영비 (1원 단위)</div></div>
+    <button class="btn btn-p" onclick="go('entry-opex')">+ 운영비 입력</button>
+  </div>
+  ${secs.map(sec=>sec.rows.length?`<div class="card"><div class="card-title">${sec.lbl}</div>
+  <div class="tw"><table>
+    <thead><tr><th>세목</th><th class="num">예산 (원)</th><th class="num">1월</th><th class="num">2월</th><th class="num">3월</th><th class="num">누계 (원)</th><th>집행률</th></tr></thead>
+    <tbody>
+    ${sec.rows.map(r=>{const rate=num(r[18]);const cls=rCls(rate);return`<tr>
+      <td>${r[3]}</td>
+      <td class="num">${fmtW(num(r[4]))}</td>
+      <td class="num ${!num(r[5])?'dim':''}">${num(r[5])?fmtW(num(r[5])):'-'}</td>
+      <td class="num ${!num(r[6])?'dim':''}">${num(r[6])?fmtW(num(r[6])):'-'}</td>
+      <td class="num ${!num(r[7])?'dim':''}">${num(r[7])?fmtW(num(r[7])):'-'}</td>
+      <td class="num"><b>${fmtW(num(r[17]))}</b></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="prog"><div class="pf ${cls}" style="width:${Math.min(rate,1)*100}%"></div></div>
+        <span class="badge b-${cls}">${pct(rate)}</span>
+      </div></td>
+    </tr>`;}).join('')}
+    </tbody>
+  </table></div></div>`:'').join('')}
+  ${entries.length?`<div class="card"><div class="card-title">최근 입력 내역</div><div class="tw"><table>
+    <thead><tr><th>집행일자</th><th>구분</th><th>세목</th><th class="num">금액 (원)</th><th>비고</th><th>입력자</th></tr></thead>
+    <tbody>${entries.map(r=>`<tr><td>${r[1]}</td><td>${r[4]}</td><td>${r[5]}</td><td class="num">${fmtW(num(r[6]))}</td><td style="font-size:12px;color:#6b7280">${r[7]||''}</td><td style="font-size:12px;color:#9ca3af">${r[8]}</td></tr>`).join('')}</tbody>
+  </table></div></div>`:''}
+  `);
+}
+
+// ══════════════════════════════════════════════════
+// 사업비 집행
+// ══════════════════════════════════════════════════
+function renderExpBiz() {
+  const depts = ['공통','운영본부','경영지원실','연구소'];
+  const secs = depts.map(d=>({
+    lbl:'사업비-'+d,
+    rows:G.rows.filter(r=>r[1]==='지출-사업비'&&String(r[2]).includes(d)&&r[3])
+  })).filter(s=>s.rows.length);
+  const entries = (G.entries['BIZ_ENTRY']||[]).slice(-10).reverse();
+
+  set$(`
+  ${ytabs()}
+  <div class="ph">
+    <div class="ph-l"><div class="ph-title">사업비 집행</div><div class="ph-sub">${G.year}년 부서별 사업비 (1원 단위)</div></div>
+    <button class="btn btn-p" onclick="go('entry-biz')">+ 사업비 입력</button>
+  </div>
+  ${secs.map(sec=>`<div class="card"><div class="card-title">${sec.lbl}</div>
+  <div class="tw"><table>
+    <thead><tr><th>세목</th><th class="num">예산 (원)</th><th class="num">1월</th><th class="num">2월</th><th class="num">누계 (원)</th><th>집행률</th></tr></thead>
+    <tbody>
+    ${sec.rows.map(r=>{const rate=num(r[18]);const cls=rCls(rate);return`<tr>
+      <td>${r[3]}</td>
+      <td class="num">${fmtW(num(r[4]))}</td>
+      <td class="num ${!num(r[5])?'dim':''}">${num(r[5])?fmtW(num(r[5])):'-'}</td>
+      <td class="num ${!num(r[6])?'dim':''}">${num(r[6])?fmtW(num(r[6])):'-'}</td>
+      <td class="num"><b>${fmtW(num(r[17]))}</b></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="prog"><div class="pf ${cls}" style="width:${Math.min(rate,1)*100}%"></div></div>
+        <span class="badge b-${cls}">${pct(rate)}</span>
+      </div></td>
+    </tr>`;}).join('')}
+    </tbody>
+  </table></div></div>`).join('')}
+  ${entries.length?`<div class="card"><div class="card-title">부서 직접 입력 내역</div><div class="tw"><table>
+    <thead><tr><th>집행일자</th><th>부서</th><th>세목</th><th class="num">금액 (원)</th><th>비고</th><th>입력자</th></tr></thead>
+    <tbody>${entries.map(r=>`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td class="num">${fmtW(num(r[6]))}</td><td style="font-size:12px;color:#6b7280">${r[7]||''}</td><td style="font-size:12px;color:#9ca3af">${r[8]}</td></tr>`).join('')}</tbody>
+  </table></div></div>`:''}
+  `);
+}
+
+// ══════════════════════════════════════════════════
+// 집행 입력 (수입 / 운영비 / 사업비 공통)
+// ══════════════════════════════════════════════════
+function renderEntry(sheetKey, sheetType) {
+  const titles = { INCOME_ENTRY:'수입 입력', OPEX_ENTRY:'운영비 입력', BIZ_ENTRY:'사업비 입력' };
+  const role = G.session.role;
+
+  const deptOpts = (role==='admin'||role==='manager')
+    ? `<option value="경영지원실">경영지원실</option><option value="운영본부">운영본부</option><option value="연구소">연구소</option><option value="희망재단">희망재단</option><option value="공통">공통</option>`
+    : `<option value="${G.session.name}">${G.session.name}</option>`;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  set$(`
+  ${ytabs()}
+  <div class="ph"><div class="ph-l"><div class="ph-title">${titles[sheetKey]}</div><div class="ph-sub">집행일자·세목·금액·비고 입력</div></div></div>
+  <div class="card" style="max-width:680px">
+    <div class="card-title">집행 내역 입력</div>
+    <div class="fgrid3">
+      <div class="fld">
+        <label>연도</label>
+        <select id="e-year">${Array.from({length:26},(_,i)=>`<option value="${2025+i}"${String(2025+i)===G.year?' selected':''}>${2025+i}년</option>`).join('')}</select>
+      </div>
+      <div class="fld">
+        <label>집행일자</label>
+        <input type="date" id="e-date" value="${today}">
+      </div>
+      <div class="fld">
+        <label>월</label>
+        <select id="e-month">${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}월</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="fgrid" style="margin-top:10px">
+      <div class="fld">
+        <label>부서</label>
+        <select id="e-dept" ${role==='dept'?'disabled':''}>${deptOpts}</select>
+      </div>
+      <div class="fld">
+        <label>구분</label>
+        <input type="text" id="e-cat" placeholder="예: 인건비, 운영비, 대외협력비">
+      </div>
+    </div>
+    <div class="fgrid" style="margin-top:10px">
+      <div class="fld">
+        <label>세목 <span style="font-size:10px;color:#9ca3af">(기존 세목 선택 또는 직접 입력)</span></label>
+        <div style="display:flex;gap:6px">
+          <select id="e-item-sel" style="flex:1" onchange="if(this.value)document.getElementById('e-item').value=this.value">
+            <option value="">-- 기존 세목 선택 --</option>
+          </select>
+        </div>
+        <input type="text" id="e-item" placeholder="세목 직접 입력" style="margin-top:6px">
+      </div>
+      <div class="fld">
+        <label>금액 (원)</label>
+        <input type="number" id="e-amount" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="fld" style="margin-top:10px">
+      <label>비고 (세부내용)</label>
+      <textarea id="e-note" rows="3" placeholder="집행 세부내용, 특이사항 등 자유롭게 기재" style="resize:vertical"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="saveEntry('${sheetKey}','${sheetType}')">저장</button>
+      <button class="btn" onclick="clearEntry()">초기화</button>
+    </div>
+    <div id="e-res" style="font-size:13px;margin-top:10px;min-height:18px"></div>
+  </div>`);
+
+  // 날짜 변경 시 월 자동 설정
+  document.getElementById('e-date').addEventListener('change', function() {
+    const m = parseInt(this.value.split('-')[1]);
+    if (m) document.getElementById('e-month').value = m;
+  });
+
+  // 기존 세목 로드
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      const sel = document.getElementById('e-item-sel');
+      r.items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item; opt.textContent = item;
+        sel.appendChild(opt);
+      });
+    })
+    .withFailureHandler(() => {})
+    .getItemList(G.token, G.year, sheetType);
+}
+
+function saveEntry(sheetKey, sheetType) {
+  const dateVal = document.getElementById('e-date').value;
+  const itemSel = document.getElementById('e-item-sel').value;
+  const itemTxt = document.getElementById('e-item').value.trim();
+  const item = itemTxt || itemSel;
+  const entry = {
+    year:   document.getElementById('e-year').value,
+    date:   dateVal,
+    month:  document.getElementById('e-month').value,
+    dept:   document.getElementById('e-dept').value,
+    cat:    document.getElementById('e-cat').value.trim(),
+    item,
+    amount: parseFloat(document.getElementById('e-amount').value) || 0,
+    note:   document.getElementById('e-note').value.trim(),
+  };
+  const res = document.getElementById('e-res');
+  if (!entry.item) { res.textContent = '세목을 선택하거나 입력하세요.'; res.style.color='#ef4444'; return; }
+  if (!entry.amount) { res.textContent = '금액을 입력하세요.'; res.style.color='#ef4444'; return; }
+  res.textContent = '저장 중...'; res.style.color='#3b82f6';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (r.ok) { res.textContent='✓ 저장되었습니다.'; res.style.color='#065f46'; toast('저장 완료','ok'); clearEntry(); }
+      else { res.textContent='오류: '+r.msg; res.style.color='#ef4444'; }
+    })
+    .withFailureHandler(e => { res.textContent='서버 오류: '+e.message; res.style.color='#ef4444'; })
+    .saveEntry(G.token, sheetKey, entry);
+}
+
+function clearEntry() {
+  ['e-item','e-amount','e-note','e-cat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const sel = document.getElementById('e-item-sel');
+  if (sel) sel.value = '';
+}
+
+// ══════════════════════════════════════════════════
+// 주요 경과 입력
+// ══════════════════════════════════════════════════
+function renderNoteEntry() {
+  set$(`
+  ${ytabs()}
+  <div class="ph"><div class="ph-l"><div class="ph-title">주요경과 입력</div><div class="ph-sub">대시보드에 표시될 주요 경과 사항을 입력합니다</div></div></div>
+  <div class="g2e">
+    <div class="card" style="max-width:480px">
+      <div class="card-title">경과 사항 입력</div>
+      <div class="fgrid">
+        <div class="fld">
+          <label>연도</label>
+          <select id="n-year">${Array.from({length:26},(_,i)=>`<option value="${2025+i}"${String(2025+i)===G.year?' selected':''}>${2025+i}년</option>`).join('')}</select>
+        </div>
+        <div class="fld">
+          <label>월</label>
+          <select id="n-month">${Array.from({length:12},(_,i)=>`<option value="${i+1}월">${i+1}월</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="fld" style="margin-top:10px">
+        <label>내용</label>
+        <textarea id="n-content" rows="4" placeholder="주요 경과 내용 입력&#10;예: 지원금수입 출산육아 약 360만원 수령" style="resize:vertical"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="saveNote()">저장</button>
+        <button class="btn" onclick="document.getElementById('n-content').value=''">초기화</button>
+      </div>
+      <div id="n-res" style="font-size:13px;margin-top:10px;min-height:18px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">등록된 경과 사항 <span style="font-size:11px;color:#9ca3af;font-weight:400">(휴지통 클릭 시 삭제)</span></div>
+      <div id="n-list">불러오는 중...</div>
+    </div>
+  </div>`);
+
+  loadNoteList();
+}
+
+function loadNoteList() {
+  google.script.run
+    .withSuccessHandler(r => {
+      const el = document.getElementById('n-list');
+      if (!el) return;
+      if (!r.ok || !r.rows.length) {
+        el.innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:8px 0">등록된 경과 사항이 없습니다.</div>';
+        return;
+      }
+      el.innerHTML = `<ul class="note-list">${r.rows.map((n,i)=>`
+        <li class="note-item">
+          <div>
+            <b>${n[1]}</b> ${n[2]}
+            <div class="note-meta">${n[3]} · ${n[4] ? new Date(n[4]).toLocaleDateString('ko-KR') : ''}</div>
+          </div>
+          <button class="note-del" onclick="deleteNote(${i})" title="삭제">✕</button>
+        </li>`).join('')}</ul>`;
+    })
+    .withFailureHandler(() => {})
+    .getNotes(G.token, G.year);
+}
+
+function saveNote() {
+  const note = {
+    year:    document.getElementById('n-year').value,
+    month:   document.getElementById('n-month').value,
+    content: document.getElementById('n-content').value.trim(),
+  };
+  const res = document.getElementById('n-res');
+  if (!note.content) { res.textContent='내용을 입력하세요.'; res.style.color='#ef4444'; return; }
+  res.textContent='저장 중...'; res.style.color='#3b82f6';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (r.ok) {
+        res.textContent='✓ 저장되었습니다.'; res.style.color='#065f46';
+        document.getElementById('n-content').value='';
+        toast('경과 사항 저장 완료','ok');
+        loadNoteList();
+      } else { res.textContent='오류: '+r.msg; res.style.color='#ef4444'; }
+    })
+    .withFailureHandler(e => { res.textContent='서버 오류: '+e.message; res.style.color='#ef4444'; })
+    .saveNote(G.token, note);
+}
+
+function deleteNote(rowIdx) {
+  if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+  google.script.run
+    .withSuccessHandler(r => {
+      if (r.ok) { toast('삭제되었습니다.','ok'); loadNoteList(); }
+      else toast('삭제 실패: '+r.msg,'err');
+    })
+    .withFailureHandler(e => toast('오류: '+e.message,'err'))
+    .deleteNote(G.token, rowIdx);
+}
+
+// ══════════════════════════════════════════════════
+// 엑셀 업로드
+// ══════════════════════════════════════════════════
+function renderUpload() {
+  set$(`
+  ${ytabs()}
+  <div class="ph"><div class="ph-l"><div class="ph-title">결산보고 업로드</div><div class="ph-sub">기존 결산보고.xlsx → 자동 파싱 저장</div></div></div>
+  <div class="card">
+    <div class="dz" id="dz" onclick="document.getElementById('fi').click()"
+      ondragover="event.preventDefault();this.classList.add('over')"
+      ondragleave="this.classList.remove('over')"
+      ondrop="doDrop(event)">
+      <div class="dz-icon">📂</div>
+      <div class="dz-t">xlsx 파일을 드래그하거나 클릭하여 선택</div>
+      <div class="dz-s">수입 · 지출-운영비 · 지출-사업비 시트 자동 인식</div>
+      <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="doFile(event)">
+    </div>
+    <div class="us" id="us"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">업로드 규칙</div>
+    <div style="font-size:13px;color:#4b5563;line-height:2">
+      · 시트명 정확히: <b>수입</b> / <b>지출-운영비</b> / <b>지출-사업비</b><br>
+      · 데이터는 5행(index 4)부터 시작 (기존 결산보고 양식 그대로)<br>
+      · 해당 연도 전체 덮어쓰기 · 금액은 1원 단위로 저장
+    </div>
+  </div>`);
+}
+
+function doDrop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('over'); const f=e.dataTransfer.files[0]; if(f)parseXlsx(f); }
+function doFile(e) { const f=e.target.files[0]; if(f)parseXlsx(f); }
+
+function parseXlsx(file) {
+  const us = document.getElementById('us');
+  us.textContent='파일 분석 중...'; us.className='us ing';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array' });
+      const targets = ['수입','지출-운영비','지출-사업비'];
+      const payload = [];
+      targets.forEach(shName => {
+        const ws = wb.Sheets[shName]; if(!ws) return;
+        const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:0, raw:true });
+        for (let i = 4; i < data.length; i++) {
+          const row = data[i];
+          const cat=String(row[0]||'').trim(), item=String(row[1]||'').trim();
+          if (!cat && !item) continue;
+          const budget=toN(row[2]);
+          const monthly=[]; for(let m=3;m<=14;m++) monthly.push(toN(row[m]));
+          const total=toN(row[15]);
+          const rate=budget>0?parseFloat((total/budget).toFixed(6)):0;
+          payload.push([G.year, shName, cat, item, budget, ...monthly, total, rate]);
+        }
+      });
+      if (!payload.length) { us.textContent='⚠ 데이터 없음. 시트명을 확인하세요.'; us.className='us err'; return; }
+      us.textContent=`서버 저장 중... (${payload.length}행)`; us.className='us ing';
+      google.script.run
+        .withSuccessHandler(r => {
+          if (r.ok) { us.textContent=`✅ ${r.count}행 저장 완료`; us.className='us ok'; toast(r.count+'행 업로드 완료','ok'); }
+          else { us.textContent='오류: '+r.msg; us.className='us err'; }
+        })
+        .withFailureHandler(e => { us.textContent='서버 오류: '+e.message; us.className='us err'; })
+        .saveUpload(G.token, G.year, payload);
+    } catch(err) { us.textContent='파일 오류: '+err.message; us.className='us err'; }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ══════════════════════════════════════════════════
+// 비밀번호 관리
+// ══════════════════════════════════════════════════
+function renderPwChange() {
+  set$(`
+  ${ytabs()}
+  <div class="ph"><div class="ph-l"><div class="ph-title">비밀번호 관리</div></div></div>
+  <div class="card" style="max-width:520px">
+    <div class="card-title">부서 비밀번호 변경</div>
+    <div class="fgrid">
+      <div class="fld">
+        <label>대상 부서</label>
+        <select id="pw-dept">
+          <option value="admin">관리자</option><option value="mgmt">경영지원실</option>
+          <option value="ops">운영본부</option><option value="research">연구소</option><option value="hope">희망재단</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label>권한</label>
+        <select id="pw-role"><option value="admin">admin</option><option value="manager">manager</option><option value="dept">dept</option></select>
+      </div>
+      <div class="fld">
+        <label>새 비밀번호</label>
+        <input type="password" id="pw-new" placeholder="새 비밀번호" oninput="onPwIn()">
+        <div id="pw-bar" class="pw-bar" style="width:0;background:#e5e7eb"></div>
+        <div id="pw-str" style="font-size:11px;color:#9ca3af;min-height:14px;margin-top:2px"></div>
+      </div>
+      <div class="fld">
+        <label>비밀번호 확인</label>
+        <input type="password" id="pw-cf" placeholder="재입력" oninput="onCf()">
+        <div id="pw-match" style="font-size:11px;min-height:14px;margin-top:2px"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:11px;font-weight:600;color:#9ca3af;margin-bottom:4px">SHA-256 해시</div>
+      <div class="hash-box" id="hash-box">비밀번호를 입력하면 표시됩니다.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="savePw()">저장</button>
+      <button class="btn" onclick="document.getElementById('pw-new').value='';document.getElementById('pw-cf').value='';onPwIn()">초기화</button>
+    </div>
+    <div id="pw-res" style="font-size:13px;margin-top:10px;min-height:18px"></div>
+  </div>`);
+}
+
+async function onPwIn() {
+  const pw=document.getElementById('pw-new').value;
+  let sc=0;
+  if(pw.length>=6)sc++;if(pw.length>=10)sc++;
+  if(/[A-Z]/.test(pw))sc++;if(/[0-9]/.test(pw))sc++;if(/[^A-Za-z0-9]/.test(pw))sc++;
+  const cols=['#e5e7eb','#ef4444','#f59e0b','#f59e0b','#22c55e','#16a34a'];
+  const lbs=['','매우약함','약함','보통','강함','매우강함'];
+  const bar=document.getElementById('pw-bar');
+  bar.style.width=(sc/5*100)+'%'; bar.style.background=cols[sc];
+  const str=document.getElementById('pw-str');
+  str.textContent=lbs[sc]; str.style.color=cols[sc];
+  document.getElementById('hash-box').textContent=pw?await sha256(pw):'비밀번호를 입력하면 표시됩니다.';
+  onCf();
+}
+function onCf(){
+  const pw=document.getElementById('pw-new').value,cf=document.getElementById('pw-cf').value,el=document.getElementById('pw-match');
+  if(!cf){el.textContent='';return;}
+  if(pw===cf){el.textContent='✓ 일치';el.style.color='#16a34a';}
+  else{el.textContent='✗ 불일치';el.style.color='#ef4444';}
+}
+async function savePw(){
+  const dept=document.getElementById('pw-dept').value,role=document.getElementById('pw-role').value;
+  const pw=document.getElementById('pw-new').value,cf=document.getElementById('pw-cf').value;
+  const res=document.getElementById('pw-res');
+  if(!pw){res.textContent='비밀번호를 입력하세요.';res.style.color='#ef4444';return;}
+  if(pw!==cf){res.textContent='비밀번호가 일치하지 않습니다.';res.style.color='#ef4444';return;}
+  if(pw.length<4){res.textContent='4자 이상 입력하세요.';res.style.color='#ef4444';return;}
+  const hash=await sha256(pw);
+  google.script.run
+    .withSuccessHandler(r=>{
+      if(r.ok){res.textContent='✅ 변경되었습니다.';res.style.color='#16a34a';toast('비밀번호 변경 완료','ok');}
+      else{res.textContent='오류: '+r.msg;res.style.color='#ef4444';}
+    })
+    .withFailureHandler(e=>{res.textContent='서버 오류: '+e.message;res.style.color='#ef4444';})
+    .changePassword(G.token,dept,hash,role);
+}
+</script>
+</body>
+</html>
