@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>한솔어린이보육재단 경영관리</title>
+<title>한솔어린이보육재단 예결산 관리</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -147,7 +147,7 @@ tr:hover td{background:#fafcff}
 <div id="login-screen">
   <div class="lc">
     <div class="lc-title">한솔어린이보육재단</div>
-    <div class="lc-sub">경영관리 시스템</div>
+    <div class="lc-sub">예결산 관리 시스템</div>
     <div class="lf">
       <label>부서</label>
       <select id="l-dept">
@@ -171,7 +171,7 @@ tr:hover td{background:#fafcff}
 <!-- ══ 메인 앱 ══ -->
 <div id="app">
   <div class="topbar">
-    <div class="tb-title">한솔어린이보육재단 경영관리 시스템</div>
+    <div class="tb-title">한솔어린이보육재단 예결산 관리 시스템</div>
     <div class="tb-r">
       <span class="tb-user" id="tb-user"></span>
       <button class="tb-out" onclick="doLogout()">로그아웃</button>
@@ -596,14 +596,16 @@ function renderExpBiz() {
   const secs=depts.map(d=>({lbl:'사업비-'+d,key:d,rows:G.rows.filter(r=>r[1]==='지출-사업비'&&String(r[2]).includes(d)&&r[3])})).filter(s=>s.rows.length);
   const entries=(G.entries['BIZ_ENTRY']||[]).slice(-10).reverse();
 
-  // 부서별 예산 요약 (BUDGET_DATA 기준)
-  const deptSumm = ['경영지원실','운영본부','연구소'].map(dk => {
-    const bd = BUDGET_DATA.dept_budget[dk] || {total:0,items:[]};
-    const exRows = G.rows.filter(r=>r[1]==='지출-사업비'&&String(r[2]).includes(dk.replace('경영지원실','경영지원').replace('운영본부','운영본부').replace('연구소','연구소')));
-    const exe = exRows.reduce((a,r)=>a+num(r[17]),0);
-    const rate = bd.total>0 ? exe/bd.total : 0;
-    return {dk, total:bd.total, exe, rate};
-  });
+  // 부서별 요약 — G.rows 합계 행 기준 (대시보드와 동일한 소스)
+  const deptSumm = ['공통','운영본부','경영지원실','연구소'].map(dk => {
+    const sumRow = G.rows.find(r =>
+      r[1]==='지출-사업비' && String(r[2]).includes(dk) && !r[3]
+    );
+    const total = sumRow ? num(sumRow[4])  : 0;
+    const exe   = sumRow ? num(sumRow[17]) : 0;
+    const rate  = sumRow ? num(sumRow[18]) : 0;
+    return { dk, total, exe, rate };
+  }).filter(d => d.total > 0 || d.exe > 0);
 
   set$(`${ytabs()}
   <div class="ph"><div class="ph-l"><div class="ph-title">사업비 집행</div><div class="ph-sub">${G.year}년 부서별 예산총액·사용총액·집행률</div></div><button class="btn btn-p" onclick="go('entry-biz')">+ 사업비 입력</button></div>
